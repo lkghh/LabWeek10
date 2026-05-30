@@ -127,6 +127,7 @@ public class RandomBirdC extends DynamicBird {
             // 군집 본능이 아무리 강해도 장애물에 닿으면 즉시 무시하고 180도 튕겨냄
             this.turn(180);
             this.turnCountdown = 0; 
+            
         } else {
             // 안전할 때는 각속도를 기반으로 부드럽게 회전 (반드시 실수형 나눗셈 사용) [15]
             int angleTurned = (int) (this.angularVelocity * (deltaTime / MILLISECONDS_PER_SECOND));
@@ -135,6 +136,7 @@ public class RandomBirdC extends DynamicBird {
 
         // 5. 방향 결정이 모두 끝난 후 마지막에 1회 직진 전진
         int distance = (int) (this.getSpeed() * (deltaTime / MILLISECONDS_PER_SECOND));
+        
         this.move(distance);
     }
 

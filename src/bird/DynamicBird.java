@@ -1,5 +1,7 @@
 package bird;
 
+import java.util.List;
+
 import drawing.Canvas;
 
 public class DynamicBird extends Bird {
@@ -51,11 +53,13 @@ public class DynamicBird extends Bird {
 	 */
 	public void update(int deltaTime) {
 		// 거리 = 속도 * 시간
-		// int 변수들의 연산에서 소수점 이하가 버려지는 것을 막기 위해 double 상수로 나눗셈을 수행합니다.
-		int distance = (int) (this.speed * (deltaTime / MILLISECONDS_PER_SECOND));
-	}
+	    int distance = (int) (this.speed * (deltaTime / MILLISECONDS_PER_SECOND));
+	    
+	    // 계산된 거리만큼 실제로 움직이도록 move() 호출 추가
+	    this.move(distance);	
+	    }
  
-    public void update(int deltaTime, java.util.List<DynamicBird> flock, double wCohesion, double wAlignment, double wSeparation) {
+    public void update(int deltaTime, List<DynamicBird> flock, double wCohesion, double wAlignment, double wSeparation) {
         // 부모 클래스인 DynamicBird는 플로킹 지능이 없으므로 단순 직진인 기존 update만 호출합니다.
         // 실제 군집 로직은 이것을 오버라이드(Override)하는 RandomBirdC에서 실행됩니다.
         this.update(deltaTime);

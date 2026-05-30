@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
@@ -25,12 +26,24 @@ public class BirdProgram {
     private Canvas canvas;
     private JPanel lowerPanel;
     private JButton addBirdButton;
+    private JButton removeBirdButton; // 💡 추가: 거북이 삭제 버튼 필드
+ // 💡 추가: 5개씩 추가 및 제거하기 위한 버튼 필드
+    private JButton add5BirdsButton;
+    private JButton remove5BirdsButton;
+    
+    
     private List<DynamicBird> flock;
     private boolean continueRunning;
+    
     private JSlider speedSlider; 
-    private JButton removeBirdButton; // 💡 추가: 거북이 삭제 버튼 필드
-
-
+    private JSlider cohesionSlider;
+    private JSlider alignmentSlider;
+    private JSlider separationSlider;
+    private JLabel speedLabel;
+    private JLabel cohesionLabel;
+    private JLabel alignmentLabel;
+    private JLabel separationLabel;
+    
 	public BirdProgram() {
 		super();
         // Exercise 8.1: 역할을 분리한 두 서브 메서드 호출 [1]
@@ -43,7 +56,7 @@ public class BirdProgram {
         // 1. JFrame 인스턴스화 및 설정 [3]
         frame = new JFrame();
         frame.setTitle("Bird Program");
-        frame.setSize(800, 600); // 이전 랩 참고
+        frame.setSize(1200, 750); // 이전 랩 참고
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
 
@@ -60,11 +73,16 @@ public class BirdProgram {
         // lowerPanel을 frame의 남쪽(SOUTH, 하단)에 추가합니다.
         frame.add(lowerPanel, BorderLayout.SOUTH);
 
-
+        
         // 4. 거북이 추가 버튼 인스턴스화 [2, 3]
         addBirdButton = new JButton("Add Bird"); 
         removeBirdButton = new JButton("Remove Bird");
-
+        
+     // 💡 1. 5개씩 조작하는 새 버튼 인스턴스화
+        add5BirdsButton = new JButton("Add 5 Birds");
+        remove5BirdsButton = new JButton("Remove 5 Birds");
+        
+        
         addBirdButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -73,7 +91,7 @@ public class BirdProgram {
 
                 // 💡 추가 (Section 4): 거북이 추가 작업을 synchronized 블록으로 보호합니다.
                 synchronized (flock) {
-                    flock.add(new bird.RandomBirdC(canvas, 400, 300));
+                    flock.add(new bird.RandomBirdC(canvas, 100, 100));
                     int lastIndex = flock.size() - 1;
                     DynamicBird newlyAddedBird = flock.get(lastIndex);
                     newlyAddedBird.setSpeed(speedSlider.getValue());
@@ -105,6 +123,39 @@ public class BirdProgram {
                 }
             }
         });
+        
+        add5BirdsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                synchronized (flock) {
+                    for (int i = 0; i < 5; i++) {
+                        flock.add(new bird.RandomBirdC(canvas, 400, 300));
+                        DynamicBird newlyAddedBird = flock.get(flock.size() - 1);
+                        newlyAddedBird.setSpeed(speedSlider.getValue());
+                    }
+                }
+            }
+        });
+        
+     // 💡 3. Remove 5 Birds 버튼 리스너 구현 (화면 잔상 제거 순차 실행)
+        remove5BirdsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                synchronized (flock) {
+                    for (int i = 0; i < 5; i++) {
+                        if (!flock.isEmpty()) {
+                            int lastIndex = flock.size() - 1;
+                            DynamicBird birdToRemove = flock.get(lastIndex);
+                            birdToRemove.undraw(); // 캔버스 잔상 제거
+                            flock.remove(lastIndex); // 리스트에서 최종 삭제
+                        } else {
+                            System.out.println("No more birds to remove!");
+                            break; // 지울 새가 없으면 반복 루프 탈출
+                        }
+                    }
+                }
+            }
+        });
 
         // 💡 3.1: 버튼에 액션 리스너(ButtonListener) 부착
      
@@ -115,16 +166,19 @@ public class BirdProgram {
         // 거북이 추가 버튼을 하단 패널(lowerPanel) 안에 배치합니다.
         lowerPanel.add(addBirdButton);
         lowerPanel.add(removeBirdButton); // 💡 추가: Add 버튼과 슬라이더 사이에 배치 [1]
-        speedSlider = new JSlider(0, 1000, 100);
+        lowerPanel.add(add5BirdsButton);    // 💡 추가 배치
+        lowerPanel.add(remove5BirdsButton); // 💡 추가 배치
+        
+        speedLabel = new JLabel("Speed: 100");
+        speedSlider = new JSlider(0, 500, 100);
         
         // (선택 사항) 눈금과 레이블 표시 설정
-        speedSlider.setMajorTickSpacing(500); // 큰 눈금 간격
-        speedSlider.setMinorTickSpacing(100); // 작은 눈금 간격
+        speedSlider.setMajorTickSpacing(200); // 큰 눈금 간격
+        speedSlider.setMinorTickSpacing(50); // 작은 눈금 간격
         speedSlider.setPaintTicks(true);      // 눈금 보이기
         speedSlider.setPaintLabels(true);     // 숫자 보이기
 
-        // 슬라이더를 버튼 옆(lowerPanel)에 부착
-        lowerPanel.add(speedSlider);
+
         
      // --- Exercise 8.8: 슬라이더 값 변경 이벤트 리스너(익명 클래스) ---
         speedSlider.addChangeListener(new ChangeListener() {
@@ -132,7 +186,7 @@ public class BirdProgram {
             public void stateChanged(ChangeEvent e) {
                 // 슬라이더의 현재 값을 가져옴
                 int newSpeed = speedSlider.getValue();
-                
+                speedLabel.setText("Speed: " + newSpeed);
                 // 💡 동기화(Thread-safe) 블록 내에서 거북이 리스트 업데이트
                 synchronized (flock) {
                     for (DynamicBird bird : flock) {
@@ -141,6 +195,35 @@ public class BirdProgram {
                 }
             }
         });
+        
+     // 💡 2. 플로킹 가중치 슬라이더 인스턴스화 및 설정 (범위: 0 ~ 100, 초기값: 50)
+        // 조작 편의성을 위해 0~100으로 설정하고 내부 로직에서 100.0으로 나누어 가중치 0.0 ~ 1.0을 구현합니다.
+        cohesionLabel = new JLabel("Cohesion:");
+        cohesionSlider = new JSlider(0, 200, 100); // 초기 가중치 0.5
+        cohesionSlider.setMajorTickSpacing(50);
+        cohesionSlider.setPaintTicks(true);
+
+        alignmentLabel = new JLabel("Alignment:");
+        alignmentSlider = new JSlider(0, 200, 100); // 초기 가중치 0.5
+        alignmentSlider.setMajorTickSpacing(50);
+        alignmentSlider.setPaintTicks(true);
+
+        separationLabel = new JLabel("Separation:");
+        separationSlider = new JSlider(0, 200, 100); // 초기 가중치 0.5
+        separationSlider.setMajorTickSpacing(50);
+        separationSlider.setPaintTicks(true);
+
+        // 하단 패널에 플로킹 컨트롤 부착
+        // 슬라이더를 버튼 옆(lowerPanel)에 부착
+        lowerPanel.add(speedLabel);
+        lowerPanel.add(speedSlider);
+        lowerPanel.add(cohesionLabel);
+        lowerPanel.add(cohesionSlider);
+        lowerPanel.add(alignmentLabel);
+        lowerPanel.add(alignmentSlider);
+        lowerPanel.add(separationLabel);
+        lowerPanel.add(separationSlider);
+        
         // 모든 GUI 구성 요소가 추가된 후 화면이 정상적으로 표시되도록 갱신합니다.
         frame.validate(); 
 
@@ -197,11 +280,16 @@ public class BirdProgram {
         	synchronized (flock) {
              
                 
-                // 2. 업데이트 및 Wrap
-                for (DynamicBird bird : flock) {
-                    bird.update(deltaTime);
-                    bird.wrapPosition(canvas.getWidth(), canvas.getHeight());
-                }
+        		// 플로킹 가중치 설정 (원하는 수치로 조절 가능하며, 나중에 GUI 슬라이더와 연동할 수 있습니다)
+        		double wCohesion = cohesionSlider.getValue() / 100.0;
+        		double wAlignment = alignmentSlider.getValue() / 100.0;
+        		double wSeparation = separationSlider.getValue() / 100.0;
+        		
+        		for (DynamicBird bird : flock) {
+        		    // 다중 매개변수가 있는 update를 호출하여 RandomBirdC의 로직을 실행시킵니다.
+        		    bird.update(deltaTime, flock, wCohesion, wAlignment, wSeparation);
+        		    bird.wrapPosition(canvas.getWidth(), canvas.getHeight());
+        		}
                 
                 // 3. 그리기
                 for (DynamicBird bird : flock) {
